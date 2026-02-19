@@ -53,7 +53,7 @@ services:
     ports:
       - "5435:5432"
 
-  inventory:
+  inventory-service:
     build: ./inventory
     container_name: inventory-service
     ports:
@@ -64,37 +64,72 @@ services:
       DB_PASSWORD: password
     depends_on:
       - inventory-db
-##
-#  cart-db:
-#    image: postgres:15
-#    container_name: cart-db
-#    environment:
-#      POSTGRES_DB: cartdb
-#      POSTGRES_USER: user
-#      POSTGRES_PASSWORD: password
-#    ports:
-#      - "5435:5432"
-#
-#  order-db:
-#    image: postgres:15
-#    container_name: order-db
-#    environment:
-#      POSTGRES_DB: orderdb
-#      POSTGRES_USER: user
-#      POSTGRES_PASSWORD: password
-#    ports:
-#      - "5436:5432"
-#
-#  inventory-db:
-#    image: postgres:15
-#    container_name: inventory-db
-#    environment:
-#      POSTGRES_DB: inventorydb
-#      POSTGRES_USER: user
-#      POSTGRES_PASSWORD: password
-#    ports:
-#      - "5437:5432"
-#
+
+  order-db:
+    image: postgres:15
+    container_name: order-db
+    environment:
+      POSTGRES_DB: orderdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5437:5432"
+
+  order-service:
+    build: ./order
+    container_name: order-service
+    environment:
+      DB_URL: jdbc:postgresql://order-db:5432/orderdb
+      DB_USERNAME: user
+      DB_PASSWORD: password
+    ports:
+      - "8084:8084"
+    depends_on:
+      - order-db
+
+  payment-service:
+    build: ./payment
+    container_name: payment-service
+    ports:
+      - "8085:8085"
+
+
+  cart-db:
+    image: postgres:15
+    container_name: cart-db
+    environment:
+      POSTGRES_DB: cartdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5436:5432"
+
+  cart-service:
+    build: ./cart
+    container_name: cart-service
+    ports:
+      - "8086:8086"
+    environment:
+      DB_URL: jdbc:postgresql://cart-db:5432/cartdb
+      DB_USERNAME: user
+      DB_PASSWORD: password
+    depends_on:
+      - cart-db
+
+  api-gateway:
+    build: ./apigateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - user-service
+      - product-service
+      - inventory-service
+      - order-service
+      - payment-service
+      - cart-service
+
+
 #  payment-db:
 #    image: postgres:15
 #    container_name: payment-db
@@ -105,21 +140,7 @@ services:
 #    ports:
 #      - "5438:5432"
 #
-##  user:
-##    build: ./user
-##    container_name: user-service
-##    ports:
-##      - "8081:8081"
-##    depends_on:
-##      - user-db
-##
-##  product:
-##    build: ./product
-##    container_name: product-service
-##    ports:
-##      - "8082:8082"
-##    depends_on:
-##      - product-db
+
 ##
 ##  cart:
 ##    build: ./cart
@@ -129,8 +150,7 @@ services:
 ##    depends_on:
 ##      - cart-db
 ##
-##  order:
-##    build: ./order
+##  order:hare\#    build: ./order
 ##    container_name: order-service
 ##    ports:
 ##      - "8084:8084"

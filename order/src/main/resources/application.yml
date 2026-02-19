@@ -1,0 +1,16 @@
+server:
+  port: 8084
+
+spring:
+  datasource:
+    url: jdbc:postgresql://order-db:5432/orderdb
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+jwt:
+  secret: mysupersecretkeymysupersecretkey123456
