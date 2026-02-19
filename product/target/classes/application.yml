@@ -1,0 +1,22 @@
+server:
+  port: 8082
+
+jwt:
+  secret: mysecretkeytmkcmysecretkeytmkc123
+  expiration: 3600000
+
+spring:
+  datasource:
+    #locally for mvn spring boot running manually
+    #url: jdbc:postgresql://localhost:5434/productdb
+
+    #docker ke lie
+    url: jdbc:postgresql://product-db:5432/productdb
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

@@ -1,0 +1,16 @@
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/UserApplication.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/config/SecurityConfig.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/controller/UserController.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/dto/AuthResponse.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/dto/LoginRequest.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/dto/UserRequest.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/dto/UserResponse.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/entity/Role.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/entity/User.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/exception/GlobalExceptionHandler.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/exception/UserAlreadyExistsException.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/repository/UserRepository.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/security/CustomUserDetailsService.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/security/JwtFilter.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/security/JwtService.java
+/home/aniket/IdeaProjects/ecommerce/user/src/main/java/com/ecommerce/user/service/UserService.java

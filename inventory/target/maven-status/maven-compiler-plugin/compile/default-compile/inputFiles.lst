@@ -1,0 +1,11 @@
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/InventoryApplication.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/config/SecurityConfig.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/controller/InventoryController.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/dto/AddStockRequest.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/dto/ReserveStockRequest.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/dto/StockResponse.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/entity/Inventory.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/repository/InventoryRepository.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/security/JwtFilter.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/security/JwtService.java
+/home/aniket/IdeaProjects/ecommerce/inventory/src/main/java/com/ecommerce/inventory/service/InventoryService.java
