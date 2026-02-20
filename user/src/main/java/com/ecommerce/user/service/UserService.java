@@ -73,9 +73,9 @@ public class UserService {
         }
 
         return jwtService.generateToken(
-                user.getId(),              // UUID
-                user.getEmail(),           // subject
-                user.getRole().name()      // role string
+                user.getId(),
+                user.getEmail(),
+                user.getRole().name()
         );
     }
 

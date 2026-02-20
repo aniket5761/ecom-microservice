@@ -36,5 +36,10 @@ spring:
           predicates:
             - Path=/api/cart/**
 
-jwt:
-  secret: mysupersecretkeymysupersecretkey123456
+logging:
+  level:
+    org:
+      springframework:
+        security=DEBUG:
+#jwt:
+#  secret: mysupersecretkeymysupersecretkey123456
