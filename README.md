@@ -114,17 +114,89 @@ Distributed caching is implemented using **Redis** to minimize database load and
 
 ---
 
-## 🚀 API Reference Quick-Look
+---
 
-| Service | Endpoint | Description | Auth |
+## 🚀 API Documentation
+
+All requests should be routed through the **API Gateway** on port `8080`.
+
+### 👤 User Service
+| Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| **User** | `POST /api/users/login` | Authenticate & get JWT | Public |
-| **Product** | `GET /api/products` | Browse catalog (Cached) | Public |
-| **Cart** | `POST /api/carts/items` | Add items to cart | User |
-| **Order** | `POST /api/orders` | Initiate saga flow | User |
+| `POST` | `/api/users/register` | Register a new user | Public |
+| `POST` | `/api/users/login` | Login and receive JWT | Public |
+| `GET` | `/api/users` | List all users | ROLE_ADMIN |
 
-> [!TIP]
-> Use the **API Gateway** on port `8080` for all external requests. Direct service access is blocked.
+### 📦 Product Service
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/products` | Get all products (Paginated) | Public |
+| `GET` | `/api/products/{id}` | Get product details | Public |
+| `POST` | `/api/products` | Create a new product | ROLE_ADMIN |
+| `DELETE` | `/api/products/{id}` | Remove a product | ROLE_ADMIN |
+
+### 🛒 Cart Service
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/cart` | View personal shopping cart | ROLE_CUSTOMER |
+| `POST` | `/api/cart/add` | Add product to cart | ROLE_CUSTOMER |
+| `DELETE` | `/api/cart/{productId}` | Remove item from cart | ROLE_CUSTOMER |
+| `POST` | `/api/cart/checkout` | Trigger order checkout | ROLE_CUSTOMER |
+
+### 📋 Order Service
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/orders` | Force-create an order (Saga) | ROLE_CUSTOMER |
+
+### 🏭 Inventory Service (Internal/Admin)
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/inventory/add` | Add stock for a product | ROLE_ADMIN |
+| `POST` | `/api/inventory/reserve/{orderId}` | Reserve stock for order | Internal |
+| `POST` | `/api/inventory/confirm/{orderId}` | Finalize stock deduction | Internal |
+| `POST` | `/api/inventory/release/{orderId}` | Rollback stock reservation | Internal |
+
+### 💳 Payment Service (Internal)
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/payment/process` | Mock payment processing | Internal |
+
+---
+
+## 🛠️ Detailed Request Specifications
+
+### 🛒 Add to Cart
+**Endpoint:** `POST /api/cart/add`
+```json
+{
+  "productId": "uuid-here",
+  "quantity": 2
+}
+```
+
+### 📋 Create Order (Direct)
+**Endpoint:** `POST /api/orders`
+```json
+{
+  "items": [
+    {
+      "productId": "uuid-1",
+      "quantity": 1,
+      "price": 299.99
+    }
+  ]
+}
+```
+
+---
+
+## 🔐 Mandatory Headers (Internal Trust)
+
+When the Gateway forwards requests, it injects the following headers. Downstream services trust these implicitly via `GatewayHeaderFilter`.
+
+*   `X-User-Id`: The UUID of the authenticated user.
+*   `X-User-Role`: The assigned role (e.g., `ROLE_CUSTOMER`, `ROLE_ADMIN`).
+*   `X-User-Email`: The user's registered email.
 
 ---
 
