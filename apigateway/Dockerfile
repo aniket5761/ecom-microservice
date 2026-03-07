@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17-jdk-jammy
 
-# Set working directory inside container
+# Set woorking directory inside container
 WORKDIR /app
 
 # Copy your built jar into container
