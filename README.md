@@ -1,17 +1,17 @@
-# 🛒 E-commerce Microservices Ecosystem
+# E-commerce Microservices Ecosystem
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![Kafka](https://img.shields.io/badge/Kafka-Event--Driven-orange.svg)](https://kafka.apache.org/)
-[![Redis](https://img.shields.io/badge/Redis-Caching-red.svg)](https://redis.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue.svg)](https://www.postgresql.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen.svg?logo=springboot)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-17-orange.svg?logo=java)](https://www.oracle.com/java/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue.svg?logo=postgresql)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
 
-A professional-grade, event-driven e-commerce platform built with Spring Boot microservices, featuring centralized security, distributed caching, and eventually consistent stock management.
+A professional-grade e-commerce platform built with Spring Boot microservices, featuring centralized security and synchronous orchestration for order management.
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
-The platform utilizes a modern microservices architecture with a centralized **API Gateway** managing security and traffic routing.
+The platform utilizes a modern microservices architecture with a centralized API Gateway managing security and traffic routing.
 
 ```mermaid
 graph TD
@@ -27,45 +27,37 @@ graph TD
     end
     
     subgraph "Infrastructure"
-        Kafka((Kafka Event Broker))
-        Redis[(Redis Cache)]
         Postgres[(PostgreSQL DB)]
     end
     
     UserService --- Postgres
     ProductService --- Postgres
-    ProductService --- Redis
-    CartService --- Redis
+    CartService --- Postgres
     OrderService --- Postgres
     InventoryService --- Postgres
     PaymentService --- Postgres
     
-    OrderService -.-> Kafka
-    InventoryService -.-> Kafka
-    PaymentService -.-> Kafka
+    OrderService -.-> InventoryService
+    OrderService -.-> PaymentService
 ```
 
 ---
 
-## 🔐 Centralized Security Workflow
+## Centralized Security Workflow
 
-Security is decoupled from business logic and enforced at the **Edge Level**.
+Security is decoupled from business logic and enforced at the Gateway and Inter-Service levels.
 
-1.  **Authentication**: Handled by `UserService`. Client receives a JWT upon login.
-2.  **Validation**: Every request is intercepted by the **API Gateway**'s `JwtFilter`.
-3.  **Identity Propagation**: Upon successful validation, the Gateway injects user identity into headers:
-    *   `X-User-Id`
-    *   `X-User-Role`
-    *   `X-User-Email`
-4.  **Trust Model**: Downstream services use a shared `GatewayHeaderFilter` to automatically populate the `SecurityContext` based on these trusted headers.
+1.  **Authentication**: Serviced by `UserService`. Client receives a JWT upon login.
+2.  **API Gateway Routing**: Requests are routed through the Gateway.
+3.  **Internal JWT Configuration**: Inter-service communication uses an `InternalJwtConfig` token-based approach to authenticate downstream requests reliably (e.g. from Order Service to Payment and Inventory services).
 
 ---
 
-## 🔄 Event-Driven Flows (Saga Pattern)
+## Synchronous Orchestration
 
-The system manages distributed transactions using the Saga pattern via Kafka to ensure eventual consistency.
+The system manages transactions using synchronous REST calls with `RestTemplate` for order processing.
 
-### 🟢 Order Success Path
+### Order Success Path
 ```mermaid
 sequenceDiagram
     participant OS as Order Service
@@ -73,18 +65,16 @@ sequenceDiagram
     participant PS as Payment Service
     
     OS->>OS: Create Order (Status: CREATED)
-    OS->>IS: Publish order-created
-    IS->>IS: Reserve Stock
-    IS->>PS: Publish inventory-reserved
-    PS->>PS: Process Payment (Success)
-    PS->>OS: Publish payment-success
-    PS->>IS: Publish payment-success
-    OS->>OS: Update Order (Status: COMPLETED)
-    IS->>IS: Confirm Stock (Deduct permanently)
-    OS->>OS: Publish order-completed (Clear Cart)
+    OS->>IS: Reserve Stock Request
+    IS-->>OS: Stock Reserved Response
+    OS->>PS: Process Payment Request
+    PS-->>OS: Payment Success Response
+    OS->>IS: Confirm Stock Request
+    IS-->>OS: Confirm Success
+    OS->>OS: Update Order (Status: PAID)
 ```
 
-### 🔴 Payment Failure Compensating Flow
+### Payment/Stock Failure Compensating Flow
 ```mermaid
 sequenceDiagram
     participant OS as Order Service
@@ -92,42 +82,29 @@ sequenceDiagram
     participant PS as Payment Service
     
     OS->>OS: Create Order (Status: CREATED)
-    OS->>IS: Publish order-created
-    IS->>IS: Reserve Stock
-    IS->>PS: Publish inventory-reserved
-    PS->>PS: Process Payment (Failed)
-    PS->>OS: Publish payment-failed
-    PS->>IS: Publish payment-failed
+    OS->>IS: Reserve Stock Request
+    IS-->>OS: Stock Reserved
+    OS->>PS: Process Payment Request
+    PS-->>OS: Payment Failed Response
+    OS->>IS: Release Stock Reservation
+    IS-->>OS: Release Success
     OS->>OS: Update Order (Status: FAILED)
-    IS->>IS: Release Stock Reservation
 ```
 
 ---
 
-## ⚡ Distributed Caching
+## API Documentation
 
-Distributed caching is implemented using **Redis** to minimize database load and improve latency.
+All requests should be routed through the API Gateway on port `8080`.
 
-*   **Shopping Cart**: Fully cached in Redis for sub-millisecond access. Cache is automatically invalidated upon order completion.
-*   **Product Catalog**: High-demand products are cached, with TTL-based eviction and manual eviction on updates.
-*   **User Sessions**: JWT metadata and frequent user lookups are optimized via Redis.
-
----
-
----
-
-## 🚀 API Documentation
-
-All requests should be routed through the **API Gateway** on port `8080`.
-
-### 👤 User Service
+### User Service
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/users/register` | Register a new user | Public |
 | `POST` | `/api/users/login` | Login and receive JWT | Public |
 | `GET` | `/api/users` | List all users | ROLE_ADMIN |
 
-### 📦 Product Service
+### Product Service
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/products` | Get all products (Paginated) | Public |
@@ -135,7 +112,7 @@ All requests should be routed through the **API Gateway** on port `8080`.
 | `POST` | `/api/products` | Create a new product | ROLE_ADMIN |
 | `DELETE` | `/api/products/{id}` | Remove a product | ROLE_ADMIN |
 
-### 🛒 Cart Service
+### Cart Service
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/cart` | View personal shopping cart | ROLE_CUSTOMER |
@@ -143,12 +120,12 @@ All requests should be routed through the **API Gateway** on port `8080`.
 | `DELETE` | `/api/cart/{productId}` | Remove item from cart | ROLE_CUSTOMER |
 | `POST` | `/api/cart/checkout` | Trigger order checkout | ROLE_CUSTOMER |
 
-### 📋 Order Service
+### Order Service
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/orders` | Force-create an order (Saga) | ROLE_CUSTOMER |
+| `POST` | `/api/orders` | Create an order | ROLE_CUSTOMER |
 
-### 🏭 Inventory Service (Internal/Admin)
+### Inventory Service (Internal/Admin)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/inventory/add` | Add stock for a product | ROLE_ADMIN |
@@ -156,16 +133,16 @@ All requests should be routed through the **API Gateway** on port `8080`.
 | `POST` | `/api/inventory/confirm/{orderId}` | Finalize stock deduction | Internal |
 | `POST` | `/api/inventory/release/{orderId}` | Rollback stock reservation | Internal |
 
-### 💳 Payment Service (Internal)
+### Payment Service (Internal)
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/payment/process` | Mock payment processing | Internal |
 
 ---
 
-## 🛠️ Detailed Request Specifications
+## Detailed Request Specifications
 
-### 🛒 Add to Cart
+### Add to Cart
 **Endpoint:** `POST /api/cart/add`
 ```json
 {
@@ -174,7 +151,7 @@ All requests should be routed through the **API Gateway** on port `8080`.
 }
 ```
 
-### 📋 Create Order (Direct)
+### Create Order (Direct)
 **Endpoint:** `POST /api/orders`
 ```json
 {
@@ -190,24 +167,14 @@ All requests should be routed through the **API Gateway** on port `8080`.
 
 ---
 
-## 🔐 Mandatory Headers (Internal Trust)
+## Technology Stack
 
-When the Gateway forwards requests, it injects the following headers. Downstream services trust these implicitly via `GatewayHeaderFilter`.
-
-*   `X-User-Id`: The UUID of the authenticated user.
-*   `X-User-Role`: The assigned role (e.g., `ROLE_CUSTOMER`, `ROLE_ADMIN`).
-*   `X-User-Email`: The user's registered email.
-
----
-
-## 🛠️ Technology Stack
-
-| Component | Technology |
-| :--- | :--- |
-| **Framework** | Spring Boot 3.2+ |
-| **Gateway** | Spring Cloud Gateway |
-| **Persistence** | PostgreSQL |
-| **Messaging** | Apache Kafka |
-| **Caching** | Redis |
-| **Security** | Spring Security & JJWT |
-| **Build Tool** | Maven |
+| Component | Technology | Badge |
+| :--- | :--- | :--- |
+| **Framework** | Spring Boot 3.3.5 | [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=white)](#) |
+| **Language**  | Java 17 | [![Java](https://img.shields.io/badge/Java-ED8B00?logo=openjdk&logoColor=white)](#) |
+| **Gateway** | Spring Cloud Gateway | [![Spring Cloud Gateway](https://img.shields.io/badge/Spring%20Cloud-6DB33F?logo=spring&logoColor=white)](#) |
+| **Persistence** | PostgreSQL | [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](#) |
+| **Security** | Spring Security & JJWT | [![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity&logoColor=white)](#) |
+| **Containerization** | Docker Compose | [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](#) |
+| **Build Tool** | Maven | [![Maven](https://img.shields.io/badge/Apache%20Maven-C71A22?logo=apachemaven&logoColor=white)](#) |
